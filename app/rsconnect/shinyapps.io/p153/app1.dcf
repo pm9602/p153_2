@@ -1,0 +1,13 @@
+name: app1
+title: app1
+username:
+account: p153
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1998501
+bundleId: 2947708
+url: https://p153.shinyapps.io/app1/
+when: 1585640483.10356
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: 2020-03-28 16-12-03_UK_backup.Rdata|UK1.Rdata
