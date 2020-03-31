@@ -59,8 +59,7 @@ uk.func1 <- function(days) 0.00000000000000002052  * days ^ 10.22 + 0.003966
 # enter cases, returns which day you should be on
 uk.func2 <- function(cases) ((cases - 0.003966)/0.00000000000000002052)^(1/10.22)
 
-# Load me some data from public health englang. Rename for later merge
-
+# load.data function loads historic data, pulls in data from all sources, compares the two and creates a global spatial polygons object with any new data.
 load.data <- function(){
   ##########################################################################################################################
   #-------------------------------------------------LOAD HEALTH DATA--------------------------------------------------------
