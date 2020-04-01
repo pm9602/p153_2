@@ -21,39 +21,88 @@ ui <- navbarPage(theme = shinytheme("cosmo"), collapsible = TRUE,
                           
                                         top = 80, right = 20, width = 550, fixed=F,
                                         
-                                        draggable = FALSE, height = "auto",
+                                        draggable = TRUE, height = "auto",
+
+                                        # create action buttons display
+                                        
+                                        div(style = "position:absolute;left:2.5em;position:absolute;top:2em;", 
+                                            actionButton('act1', 'Cases per 100000', width = 220)
+                                        ),
+                                        
+                                        div(style = "position:absolute;right:2.5em;position:absolute;top:2em;", 
+                                            actionButton('act2', 'Total Cases', width = 220)
+                                        ),
+                                        
+                                        div(style = "position:absolute;left:2.5em;position:absolute;top:6.5em;",
+                                            actionButton('act3', 'Age Range', width = 220)
+                                        ),
+                                        
+                                        div(style = "position:absolute;right:2.5em;position:absolute;top:6.5em;",
+                                            actionButton('act4', 'Cases to Age Range Ratio', width = 220)
+                                        ),
+                                        
+                                        div(style = "position:absolute;left:2.5em;position:absolute;top:11em;",
+                                            actionButton('act5', 'Predictive Analysis', width = 220)
+                                        ),
+                                        
+                                        div(style = "position:absolute;right:2.5em;position:absolute;top:11em;",
+                                            actionButton('act6', '3 Day % Increase', width = 220)
+                                        ),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
+                                        
+                                        br(),
                                         
                                         br(),
                                         
                                         # show current dtg being presented
                                         
+                                        #verbatimTextOutput("id"),
+                                        
                                         h3(textOutput("dtg.text")),
                                         
                                         #slider input
-                                        
+                                         
                                         uiOutput("dtg.select"),
                                         
-                                        uiOutput("proportion"),
+                                        #uiOutput("proportion"),
                                         
                                         conditionalPanel(
                                           
-                                          condition = "input.radio == 3 || input.radio == 4",
+                                          condition = "output.id == 3 || output.id == 4",
                                           
-                                          sliderInput("slider.age", label = h5("Age Range (0-90)"), min = 0, max = 90, value = c(68, 90))
+                                          sliderInput("slider.age", label = h5("Age Range (0-90)"), min = 0, max = 90, value = c(68, 90), width = 500)
                                           
                                         ),
                                         
                                         conditionalPanel(
                                           
-                                          condition = "input.radio == 5",
+                                          condition = "output.id == 5",
                                           
                                           selectInput("pred", label = h5("Select number of days to look forward"), 
                                                       choices = list("1" = 1, "2" = 2, "3" = 3,"4" = 4,"5" = 5), 
-                                                      selected = 5)
+                                                      selected = 5,
+                                                      width = 500)
                                           
                                         ),
                                         
-                                        DT::dataTableOutput("table")
+                                        DT::dataTableOutput("table"),
+                                        # denotes which layer is showing. MUST BE DISPLAYED FOR LAYER FILTER FUNCION TO WORK. I've hidden down here for the time being whilst I work out how to get rid of it.
+                                        verbatimTextOutput("id")
                           )
                           
                  ),
