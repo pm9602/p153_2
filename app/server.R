@@ -219,12 +219,12 @@ load.data <- function(){
     
     # get rid of double spacing and spacing either side of words
     nhs.wales.data$V1 <- nhs.wales.data$V1 %>% as.character() %>% str_trim(.,side = "both") %>% {gsub("  "," ",.)}
-    #nhs.wales.data$V1[c(3,7,6,8,5,2,4)]
-    #UK.i[UK.i$code %>% {grep("W",.)},c(2)] <- nhs.wales.data$V1[c(3,7,6,8,5,2,4)]
-    #UK.i[UK.i$code %>% {grep("W",.)},c(2)]
-    
+
     # we are dropping anything that isnt being reported as one of the 7 nhs regions of wales.
     nhs.wales.data.trim <- nhs.wales.data$V1 %>% {gsub(" ","",.)} %in% (UK.i$name %>% {gsub(" ","",.)}) %>% nhs.wales.data[.,]
+    
+    # get rid of non numeric characters in data
+    nhs.wales.data.trim[,3] <- nhs.wales.data.trim[,3] %>% {gsub("[^0-9.-]", "", .)}
     
     # merge the core data codes with the newly pulled data (which doesnt come with codes.... >:[ ). Re order for happines and joy (and so we can merge it to the rest of the data)
     names(nhs.wales.data.trim) <- c("name","new",df.name) 
@@ -348,7 +348,7 @@ load.data <- function(){
   #*************************************************************************************************************************
   url.je <- "https://www.gov.je/Health/Coronavirus/Pages/CoronavirusCases.aspx"
   
-  jey.cases <- 83
+  jey.cases <- 81
   
   #if(jey.cases != UK.i$code %>% {grep("JEY1",.)} %>% UK.i[.,ncol(UK.i)]) jey.cases else UK.i$code %>% {grep("JEY1",.)} %>% UK.i[.,ncol(UK.i)]
   
@@ -381,9 +381,9 @@ load.data <- function(){
       
       {gsub("\n","",.)} %>%
       
-      {gsub("\r","",.)}
+      {gsub("\r","",.)} %>% matrix(.,nrow = 2, byrow = T)
     
-    ggy.cases <- 60#nhs.ge.data[6] %>% as.numeric()
+    ggy.cases <- nhs.ge.data[2,2] %>% as.numeric()
     
     # create Isle of man data frame
     ggy.df <- data.frame(
@@ -497,15 +497,27 @@ load.data <- function(){
   os1 <- 7
   os2 <- 97
   
-  assign("set.t", set.t, envir = .GlobalEnv)
   assign("os1", os1, envir = .GlobalEnv)
   assign("os2", os2, envir = .GlobalEnv)
+  
+  
+  # create global variabls for action button control
+  assign("act1", act1 <- 0, envir = .GlobalEnv)
+  assign("act2", act2 <- 0, envir = .GlobalEnv)
+  assign("act3", act3 <- 0, envir = .GlobalEnv)
+  assign("act4", act4 <- 0, envir = .GlobalEnv)
+  assign("act5", act5 <- 0, envir = .GlobalEnv)
+  assign("act6", act6 <- 0, envir = .GlobalEnv)
+  
+  
+  assign("set.t", set.t, envir = .GlobalEnv)
+
   return()
   
 }
 
 #########################################################################################################################
-#------------------------------------------------MAPS MAPS APPS-----------------------------------------------------------
+#------------------------------------------------SERVER-----------------------------------------------------------------
 #########################################################################################################################
 
 server <- function(input, output){
@@ -539,12 +551,15 @@ server <- function(input, output){
     
         title = tags$b("P153 CORVID TRACKER"),
       
-        "P153 tracks data from Scotland, England, Wales and Northern Ireland health services. The demographic data is pulled from the Office of National Statistics. The data is either scraped from the websites or manually entered. Please contact Paddy Mullany on patrick.a.m2020@gmail.com if there are any issues, if you would like new features adding or if you would like to see the methodology behind the predictive analysis.",br(),
+        "P153 tracks data from Scotland, England, Wales and Northern Ireland health services. The demographic data is pulled from the Office of National Statistics. The data is either scraped from the websites or manually entered. Please contact Paddy Mullany on" ,
+        tags$b("patrick.a.m2020@gmail.com"),
+        " if there are any issues, if you would like new features adding or if you would like to see the methodology behind the predictive analysis.",
+        br(),
         br(),
         tags$b("Recent Updates"),br(),
         "- Historic data added and rationalised to day by day information",br(),
-        "- Predictive analysis modelled on European case growth and Italian ICU bed usage"
-    
+        "- Predictive analysis modelled on European case growth and Italian ICU bed usage",br(),
+        "- Percentage change over 3 days added. Note that some areas (such as NI) will show large percentage increases. This is appears to be due to reporting standards changing, not sudden increases in cases"
         ))
   
     })
@@ -651,7 +666,14 @@ server <- function(input, output){
   # slider for selecting historic data
   output$dtg.select <- renderUI({
     
-    sliderInput("dtg.server", label = h4("View historical data"), min = 1, max = ncol(data.in()@data)-os2, value = ncol(data.in()@data)-os2, step = 1, animate = TRUE)
+    sliderInput("dtg.server",
+                label = h4("View historical data"),
+                min = 1,
+                max = ncol(data.in()@data)-os2,
+                value = ncol(data.in()@data)-os2,
+                step = 1,
+                animate = TRUE,
+                width = 500)
     
     })
   
@@ -686,6 +708,55 @@ server <- function(input, output){
   
     })
   
+  # Not actually a UI function itself, it manages teh output from the action button panel
+  bselect <- reactive({
+    # on opening the program out doesn't actually exists, and thus needs a value
+    if(exists("out") == FALSE) out <- 1
+    if(input$act1 > max(act1)) out <- 1
+    if(input$act2 > max(act2)) out <- 2
+    if(input$act3 > max(act3)) out <- 3
+    if(input$act4 > max(act4)) out <- 4
+    if(input$act5 > max(act5)) out <- 5
+    if(input$act6 > max(act6)) out <- 6
+    
+    # if action button is pressed, overwrite global variable 
+    if(input$act1 > 0){
+      act1 <- c(act1,input$act1)
+      assign("act1", act1, envir = .GlobalEnv)
+    }
+    
+    if(input$act2 > 0){
+      act2 <- c(act2,input$act2)
+      assign("act2", act2, envir = .GlobalEnv)
+    }
+    
+    if(input$act3 > 0){
+      act3 <- c(act3,input$act3)
+      assign("act3", act3, envir = .GlobalEnv)
+    }
+    
+    if(input$act4 > 0){
+      act4 <- c(act4,input$act4)
+      assign("act4", act4, envir = .GlobalEnv)
+    }
+    
+    if(input$act5 > 0){
+      act5 <- c(act5,input$act5)
+      assign("act5", act5, envir = .GlobalEnv)
+    }
+    
+    if(input$act6 > 0){
+      act6 <- c(act6,input$act6)
+      assign("act6", act6, envir = .GlobalEnv)
+    }
+    
+    out
+    
+  })
+  
+  # pass bselect variable to UI for use in conditional formatting
+  output$id<-reactive({bselect()})
+  
   ####################################################################################################
   ####################################################################################################
   # BASE MAP AND POLYGON PLOTTING
@@ -706,8 +777,12 @@ server <- function(input, output){
     
     req(!is.null(input$dtg.server))
     
-    req(!is.null(input$radio))
+    #req(!is.null(input$radio))
+    
+    # TESTING AREA
+    # if action button is pressed it should be greater than it's historical outputs
 
+    
     # used to define pal.r (it creates a vector of all the numbers that might be passed to pal.r as the domain for pal.r) 
     fil.d <- (100000 * data.in()@data[,(os2+1):ncol(data.in()@data)] / data.in()@data[,(os1-1)]) %>% round(.,digits = 0)
       # pallette for displaying age  
@@ -731,30 +806,30 @@ server <- function(input, output){
       addPolygons(weight = 0,
                   
                   # cases per 100000
-                  fillColor = if(input$radio == 1){ 
+                  fillColor = if(bselect() == 1){ 
                     
                   data.in()@data[,input$dtg.server+os2] %>% div.mul(.,data.in()@data[,(os1-1)]) %>% pal.r
                   
                   # cases total
-                  } else if(input$radio == 2){
+                  } else if(bselect() == 2){
                     
                     data.in()@data[,input$dtg.server+os2] %>% pal.a
                   
                   # age distribution around country  
-                  } else if(input$radio == 3){
+                  } else if(bselect() == 3){
                   
                      log(age.df()[,4],base = exp(1)) %>% pal.o
 
                   # cases to age distribution around country
-                  } else if(input$radio == 4){
+                  } else if(bselect() == 4){
                     
                     log(age.df()[,5],base = exp(1)) %>% pal.p
                     
-                  } else if (input$radio == 5){
+                  } else if (bselect() == 5){
                     
                     pred.df()[,2] %>% pal.pred
                     
-                  }else if (input$radio == 6){
+                  }else if (bselect() == 6){
                     
                     inc.df()[,2] %>% log %>% pal.inc
                     
@@ -818,10 +893,10 @@ server <- function(input, output){
   # create companion table
   output$table <- renderDataTable({
     
-    req(!is.null(input$radio))
+    #req(!is.null(input$radio))
     
     # prep data for table in order to show either proportional or total cases
-    if(input$radio == 1){
+    if(bselect() == 1){
       
       # returns names, total population and cases
       dt <- data.in()@data[,c(2,(os1-1),input$dtg.server+os2)]
@@ -833,7 +908,7 @@ server <- function(input, output){
       
       colnames(dt) <- c("Area","Total Population","Confirmed Cases per 10000")
 
-      } else if(input$radio == 2){
+      } else if(bselect() == 2){
         
       dt <- data.in()@data[,c(2,(os1-1),input$dtg.server+os2)]
     
@@ -842,7 +917,7 @@ server <- function(input, output){
       
       colnames(dt) <- c("Area","Total Population","Total Confirmed Cases")
       
-      } else if(input$radio == 3 | input$radio == 4){
+      } else if(bselect() == 3 | bselect() == 4){
         
         
         dt <- age.df()[,c(2:5)]
@@ -855,7 +930,7 @@ server <- function(input, output){
         
         dt <- dt[order(-dt[,3]),]
         
-      } else if(input$radio == 5){
+      } else if(bselect() == 5){
         
         dt <- pred.df()
         
@@ -866,11 +941,13 @@ server <- function(input, output){
                           paste0("Crit Care Beds Req Est in ",input$pred," days (higher)")
         )
       # percentage increase over 3 days
-      }  else if(input$radio == 6){
+      }  else if(bselect() == 6){
         
         dt <- inc.df()
         
         colnames(dt) <- c("Area", "Percentage increase over last 3 days")
+        
+        dt <- dt[order(-dt[,2]),]
         
       }
     
@@ -878,6 +955,7 @@ server <- function(input, output){
   
     })
   
+  # create data table for download
   output$table.out <- renderDataTable({
     
     datatable(
@@ -895,7 +973,7 @@ server <- function(input, output){
     
     filename = function() {
     
-        paste0("p153data_",Sys.time() %>% gsub(":","-",.) %>% gsub(" ","_",.), ".csv")
+        paste0("Data_gathered_and_aggregated_by_Paddy_Mullany_as_at_",Sys.time() %>% gsub(":","-",.) %>% gsub(" ","_",.), ".csv")
     
       },
     
